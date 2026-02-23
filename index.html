@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>בינגו פורים 🎭</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap');
+
+  :root {
+    --purple: #7B2D8B;
+    --gold: #FFD700;
+    --orange: #FF6B00;
+    --pink: #FF1493;
+    --teal: #00CED1;
+    --bg: #1a0033;
+    --card-bg: #2d0060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: white;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Confetti background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(123,45,139,0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(255,107,0,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(0,206,209,0.2) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    position: relative;
+  }
+
+  .header h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--gold), var(--orange), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    letter-spacing: -1px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  .header .emoji-row {
+    font-size: 2.5rem;
+    margin: 10px 0;
+    animation: bounce 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-8px); }
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+
+  .tab-btn {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .tab-btn:hover, .tab-btn.active {
+    background: var(--gold);
+    color: var(--bg);
+    transform: scale(1.05);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ===== QUIZ SECTION ===== */
+  .quiz-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .question-card {
+    background: linear-gradient(135deg, var(--card-bg), #1a0050);
+    border: 2px solid var(--purple);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 30px rgba(123,45,139,0.5);
+    transition: all 0.3s;
+  }
+
+  .question-num {
+    font-size: 0.85rem;
+    color: var(--teal);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .question-text {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    color: white;
+  }
+
+  .question-emoji {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+
+  .show-answer-btn {
+    background: linear-gradient(135deg, var(--orange), var(--pink));
+    border: none;
+    color: white;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(255,107,0,0.4);
+  }
+
+  .show-answer-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255,107,0,0.6);
+  }
+
+  .answer-reveal {
+    display: none;
+    margin-top: 15px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(0,206,209,0.15), rgba(123,45,139,0.15));
+    border: 2px solid var(--teal);
+    border-radius: 16px;
+    animation: fadeIn 0.4s ease;
+    text-align: center;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .answer-reveal.visible { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+  /* Bingo-cell preview inside answer */
+  .bingo-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(123,45,139,0.6), rgba(45,0,96,0.8));
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 18px 36px;
+    gap: 8px;
+    min-width: 140px;
+    box-shadow: 0 0 24px rgba(255,215,0,0.35);
+    animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+    to   { transform: scale(1)   rotate(0deg);  opacity: 1; }
+  }
+
+  .bingo-preview .cell-emoji { font-size: 4rem; line-height: 1; }
+  .bingo-preview .cell-text  { font-size: 1.1rem; font-weight: 700; color: white; text-align: center; }
+
+  /* Quiz navigation */
+  .quiz-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    background: rgba(255,215,0,0.15);
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .nav-btn:hover {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .quiz-progress {
+    text-align: center;
+    color: var(--teal);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--purple));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+  }
+
+  /* ===== BINGO BOARDS ===== */
+  .boards-section {}
+
+  .board-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .ctrl-btn {
+    background: rgba(0,206,209,0.15);
+    border: 2px solid var(--teal);
+    color: var(--teal);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: 'Heebo', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+  }
+
+  .ctrl-btn:hover, .ctrl-btn.active {
+    background: var(--teal);
+    color: var(--bg);
+  }
+
+  .boards-grid {
+    display: grid;
+    gap: 30px;
+  }
+
+  .bingo-board-wrap {
+    background: linear-gradient(135deg, #2d0060, #1a0040);
+    border: 3px solid var(--gold);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 0 40px rgba(255,215,0,0.2);
+  }
+
+  .board-title {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--gold);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+  }
+
+  .bingo-header-row {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .bingo-header-cell {
+    background: linear-gradient(135deg, var(--orange), var(--pink));
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 900;
+    text-align: center;
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .bingo-grid {
+    display: grid;
+    gap: 6px;
+  }
+
+  .bingo-cell {
+    background: linear-gradient(135deg, rgba(123,45,139,0.6), rgba(45,0,96,0.8));
+    border: 2px solid rgba(255,215,0,0.3);
+    border-radius: 10px;
+    padding: 8px 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bingo-cell:hover {
+    border-color: var(--gold);
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(255,215,0,0.4);
+  }
+
+  .bingo-cell.marked {
+    background: linear-gradient(135deg, var(--gold), var(--orange));
+    border-color: white;
+  }
+
+  .bingo-cell.marked::after {
+    content: '✓';
+    position: absolute;
+    font-size: 2rem;
+    color: white;
+    opacity: 0.7;
+  }
+
+  .cell-emoji {
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .cell-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: white;
+  }
+
+  .bingo-cell.marked .cell-text,
+  .bingo-cell.marked .cell-emoji {
+    opacity: 0.3;
+  }
+
+  .free-cell {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    border-color: var(--gold);
+  }
+
+  /* Print */
+  .print-btn {
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    border: none;
+    color: white;
+    padding: 14px 30px;
+    border-radius: 50px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: block;
+    margin: 20px auto 10px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(123,45,139,0.5);
+  }
+
+  .print-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(123,45,139,0.7);
+  }
+
+  /* BINGO win animation */
+  .bingo-win {
+    display: none;
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--gold);
+    animation: winPulse 0.5s ease-in-out infinite alternate;
+    margin: 10px 0;
+  }
+
+  @keyframes winPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+  }
+
+  /* Question bank display */
+  .questions-list {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .q-item {
+    background: rgba(255,255,255,0.05);
+    border-right: 4px solid var(--orange);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.95rem;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .q-num {
+    color: var(--gold);
+    font-weight: 700;
+    min-width: 30px;
+  }
+
+  .q-q { color: white; flex: 1; }
+  .q-a { color: var(--teal); font-weight: 700; }
+
+  /* complete sentence style */
+  .complete-tag {
+    background: var(--pink);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+
+  @media print {
+    body { background: white; color: black; }
+    body::before { display: none; }
+    .tabs, .tab-btn, .print-btn, .show-answer-btn, .ctrl-btn, .board-controls,
+    #quiz-tab, #questions-tab { display: none !important; }
+    #boards-tab { display: block !important; }
+    .bingo-board-wrap {
+      border: 2px solid #333;
+      box-shadow: none;
+      background: white;
+      page-break-inside: avoid;
+      margin-bottom: 30px;
+    }
+    .board-title { color: #333; }
+    .bingo-header-cell { background: #7B2D8B; }
+    .bingo-cell {
+      background: #f8f0ff;
+      border-color: #7B2D8B;
+    }
+    .cell-text { color: #333; font-size: 0.8rem; }
+    .boards-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+    @page { margin: 1cm; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="emoji-row">🎭🎪🎉🪅🎊</div>
+    <h1>בינגו פורים</h1>
+    <p style="color: var(--teal); margin-top: 8px; font-size: 1.1rem;">חידון ולוחות בינגו לשנת לימוד מהנה!</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('quiz')">🎯 חידון אינטראקטיבי</button>
+    <button class="tab-btn" onclick="showTab('boards')">🃏 לוחות בינגו</button>
+    <button class="tab-btn" onclick="showTab('questions')">📋 כל השאלות</button>
+  </div>
+
+  <!-- QUIZ TAB -->
+  <div id="quiz-tab" class="tab-content active">
+    <div class="quiz-container">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="quiz-progress" id="quizProgress">שאלה 1 מתוך 30</div>
+      <div class="question-card" id="questionCard">
+        <div class="question-num" id="qNum">שאלה 1</div>
+        <div class="question-emoji" id="qEmoji">🎭</div>
+        <div class="question-text" id="qText"></div>
+        <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:10px;">מצא את הכרטיס עם הסמל בלוח הבינגו שלך 👇</p>
+        <button class="show-answer-btn" onclick="toggleAnswer()">💡 הצג תשובה</button>
+        <div class="answer-reveal" id="answerReveal"></div>
+      </div>
+      <div class="quiz-nav">
+        <button class="nav-btn" onclick="prevQ()">◀ קודם</button>
+        <button class="nav-btn" onclick="nextQ()">הבא ▶</button>
+        <button class="nav-btn" onclick="randomQ()">🎲 אקראי</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOARDS TAB -->
+  <div id="boards-tab" class="tab-content">
+    <div class="board-controls">
+      <button class="ctrl-btn active" onclick="showLevel(1)">רמה 1 – לוחות 4×4</button>
+      <button class="ctrl-btn" onclick="showLevel(2)">רמה 2 – לוחות 3×3</button>
+      <button class="nav-btn" onclick="window.print()">🖨️ הדפס לוחות</button>
+    </div>
+    <div class="boards-grid" id="boardsGrid"></div>
+  </div>
+
+  <!-- QUESTIONS TAB -->
+  <div id="questions-tab" class="tab-content">
+    <div class="questions-list" id="questionsList"></div>
+  </div>
+</div>
+
+<script>
+// ====== DATA ======
+const questions = [
+  // Regular questions (1-25)
+  // answerEmoji = הסמל שמופיע בלוח הבינגו לצד אותה תשובה
+  { q: "מה שם הרשע שרצה להשמיד את היהודים בסיפור פורים?", a: "המן", emoji: "🤔", answerEmoji: "😈" },
+  { q: "מי הייתה המלכה שהצילה את עם ישראל?", a: "אסתר", emoji: "🤔", answerEmoji: "👸" },
+  { q: "מי היה הדוד של אסתר שגידל אותה?", a: "מרדכי", emoji: "🤔", answerEmoji: "👴" },
+  { q: "מה שם המלך בסיפור פורים?", a: "אחשוורוש", emoji: "🤔", answerEmoji: "👑" },
+  { q: "באיזה עיר התרחש סיפור פורים?", a: "שושן", emoji: "🤔", answerEmoji: "🏰" },
+  { q: "מה נהוג לאכול בפורים?", a: "אוזני המן", emoji: "🤔", answerEmoji: "🥟" },
+  { q: "כמה ימים צמה אסתר לפני שניגשה למלך?", a: "שלושה ימים", emoji: "🤔", answerEmoji: "🕐" },
+  { q: "מה המן תכנן לעשות ליהודים?", a: "להשמיד אותם", emoji: "🤔", answerEmoji: "📜" },
+  { q: "מהי אחת ממצוות החג המתוקה? 😊 (רמז: שולחים לחברים)", a: "משלוח מנות", emoji: "🤔", answerEmoji: "🎁" },
+  { q: "מה שמו של המאכל המסורתי בצורת אוזן שאוכלים בפורים?", a: "אוזן המן", emoji: "🤔", answerEmoji: "🥟" },
+  { q: "מה קוראים בבית הכנסת בפורים?", a: "מגילת אסתר", emoji: "🤔", answerEmoji: "📖" },
+  { q: "מה לובשים בפורים?", a: "תחפושת", emoji: "🤔", answerEmoji: "🎭" },
+  { q: "מה עושים כשמזכירים את שם המן בקריאת המגילה?", a: "מרעישים / מקישים", emoji: "🤔", answerEmoji: "🔔" },
+  { q: "איזה משקה נהוג לשתות בפורים?", a: "יין", emoji: "🤔", answerEmoji: "🍷" },
+  { q: "באיזה חודש חל חג הפורים?", a: "אדר", emoji: "🤔", answerEmoji: "📅" },
+  { q: "כמה ימים חוגגים את פורים?", a: "יום אחד (או יומיים בערים מוקפות חומה)", emoji: "🤔", answerEmoji: "🗓️" },
+  { q: "מה המצווה של מתנות לאביונים?", a: "לתת מתנות לעניים / צדקה", emoji: "🤔", answerEmoji: "💝" },
+  { q: "מה שם עמו של המן?", a: "עמלק / אגגי", emoji: "🤔", answerEmoji: "⚔️" },
+  { q: "למה נקרא החג 'פורים'?", a: "על שם 'פור' – הגורל שהטיל המן", emoji: "🤔", answerEmoji: "🎲" },
+  { q: "מה הייתה עבודתו של מרדכי?", a: "ישב בשער המלך", emoji: "🤔", answerEmoji: "🚪" },
+  { q: "באיזה יום בחודש אדר חוגגים פורים ברוב הערים?", a: "י\"ד (14) באדר", emoji: "🤔", answerEmoji: "🗓️" },
+  { q: "מי הייתה המלכה לפני אסתר?", a: "ושתי", emoji: "🤔", answerEmoji: "👑" },
+  { q: "מה אסתר הסתירה מהמלך בהתחלה?", a: "שהיא יהודייה", emoji: "🤔", answerEmoji: "🤫" },
+  { q: "מה שמו של העם שרצה המן לפגוע בהם?", a: "היהודים", emoji: "🤔", answerEmoji: "✡️" },
+  { q: "מה סיפר מרדכי לאסתר שהמן מתכנן לעשות?", a: "להשמיד את כל היהודים", emoji: "🤔", answerEmoji: "😱" },
+
+  // Complete-the-sentence questions (26-30) - marked with type
+  { q: "השלם: 'מִשְׁתֶּה וְשִׂמְחָה וְיוֹם ___ וּמִשְׁלוֹחַ מָנוֹת אִישׁ לְרֵעֵהוּ'", a: "טוֹב", emoji: "✍️", answerEmoji: "📜", type: "complete" },
+  { q: "השלם: 'ליהודים הייתה ___ ושמחה וששון ויקר'", a: "אורה", emoji: "✍️", answerEmoji: "✨", type: "complete" },
+  { q: "השלם: 'בשנת שלוש למלכו עשה ___ משתה לכל שריו ועבדיו'", a: "אחשוורוש", emoji: "✍️", answerEmoji: "👑", type: "complete" },
+  { q: "השלם: 'כִּי מָרְדֳּכַי הַיְּהוּדִי מִשְׁנֶה לַמֶּלֶךְ ___ וְגָדוֹל לַיְּהוּדִים'", a: "אחשוורוש", emoji: "✍️", answerEmoji: "🧎", type: "complete" },
+  { q: "השלם: 'לכי כנוס את כל ___ הנמצאים בשושן וצומו עלי'", a: "היהודים", emoji: "✍️", answerEmoji: "🕍", type: "complete" },
+];
+
+// Answers for bingo cells
+const bingoAnswers = [
+  { text: "המן", emoji: "😈" },
+  { text: "אסתר", emoji: "👸" },
+  { text: "מרדכי", emoji: "👴" },
+  { text: "אחשוורוש", emoji: "👑" },
+  { text: "שושן", emoji: "🏰" },
+  { text: "אוזן המן", emoji: "🥟" },
+  { text: "3 ימים", emoji: "🕐" },
+  { text: "תחפושת", emoji: "🎭" },
+  { text: "מגילת אסתר", emoji: "📖" },
+  { text: "משלוח מנות", emoji: "🎁" },
+  { text: "חודש אדר", emoji: "📅" },
+  { text: "המלכה ושתי", emoji: "👸" },
+  { text: "גורל / פור", emoji: "🎲" },
+  { text: "צדקה", emoji: "💝" },
+  { text: "14 באדר", emoji: "🗓️" },
+  { text: "עמלק", emoji: "⚔️" },
+  { text: "שתייה / יין", emoji: "🍷" },
+  { text: "יהודייה", emoji: "🤫" },
+  { text: "מרעישים", emoji: "🔔" },
+  { text: "המלכה אסתר", emoji: "👸" },
+  { text: "ישב בשער", emoji: "🚪" },
+  { text: "ליהודים", emoji: "✡️" },
+  { text: "אורה", emoji: "✨" },
+  { text: "יכרע", emoji: "🧎" },
+  { text: "אחשוורוש", emoji: "🎊" },
+  { text: "יהודים", emoji: "🕍" },
+];
+
+// ====== QUIZ LOGIC ======
+let currentQ = 0;
+let answerVisible = false;
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').textContent = `שאלה ${currentQ + 1}`;
+  document.getElementById('qEmoji').textContent = q.emoji;
+  document.getElementById('qText').textContent = q.q;
+  // Answer reveal with big matching bingo emoji
+  document.getElementById('answerReveal').innerHTML =
+    `<div style="font-size:0.85rem;color:var(--teal);font-weight:700;margin-bottom:10px;letter-spacing:1px;">✅ התשובה בלוח הבינגו:</div>` +
+    `<div class="bingo-preview">` +
+      `<div class="cell-emoji">${q.answerEmoji}</div>` +
+      `<div class="cell-text">${q.a}</div>` +
+    `</div>`;
+  document.getElementById('answerReveal').classList.remove('visible');
+  document.getElementById('quizProgress').textContent = `שאלה ${currentQ + 1} מתוך ${questions.length}`;
+  document.getElementById('progressFill').style.width = ((currentQ + 1) / questions.length * 100) + '%';
+  answerVisible = false;
+  if (q.type === 'complete') {
+    document.getElementById('questionCard').style.borderColor = 'var(--pink)';
+  } else {
+    document.getElementById('questionCard').style.borderColor = 'var(--purple)';
+  }
+}
+
+function toggleAnswer() {
+  const el = document.getElementById('answerReveal');
+  if (answerVisible) { el.classList.remove('visible'); answerVisible = false; }
+  else { el.classList.add('visible'); answerVisible = true; }
+}
+
+function nextQ() { currentQ = (currentQ + 1) % questions.length; renderQuestion(); }
+function prevQ() { currentQ = (currentQ - 1 + questions.length) % questions.length; renderQuestion(); }
+function randomQ() { currentQ = Math.floor(Math.random() * questions.length); renderQuestion(); }
+
+renderQuestion();
+
+// ====== BOARDS ======
+let currentLevel = 1;
+
+function showLevel(level) {
+  currentLevel = level;
+  document.querySelectorAll('.ctrl-btn').forEach((b, i) => b.classList.toggle('active', i === level - 1));
+  renderBoards();
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderBoards() {
+  const grid = document.getElementById('boardsGrid');
+  grid.innerHTML = '';
+
+  if (currentLevel === 1) {
+    // 7 boards of 4x4 = 16 cells
+    grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(340px, 1fr))';
+    for (let b = 0; b < 7; b++) {
+      const cells = shuffle(bingoAnswers).slice(0, 16);
+      grid.appendChild(createBoard(cells, 4, `לוח ${b + 1} – רמה 1`, b));
+    }
+  } else {
+    // 7 boards of 3x3 = 9 cells (no free cell)
+    grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+    for (let b = 0; b < 7; b++) {
+      const cells = shuffle(bingoAnswers).slice(0, 9);
+      grid.appendChild(createBoard(cells, 3, `לוח ${b + 1} – רמה 2`, b + 10));
+    }
+  }
+}
+
+function createBoard(cells, size, title, boardId) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bingo-board-wrap';
+  wrap.id = `board-${boardId}`;
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'board-title';
+  titleEl.textContent = `🎭 ${title} 🎭`;
+  wrap.appendChild(titleEl);
+
+  // BINGO header (only for 4x4)
+  if (size === 4) {
+    const headerRow = document.createElement('div');
+    headerRow.className = 'bingo-header-row';
+    headerRow.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+    headerRow.style.direction = 'ltr';
+    ['B', 'I', 'N', 'G'].forEach(letter => {
+      const cell = document.createElement('div');
+      cell.className = 'bingo-header-cell';
+      cell.textContent = letter;
+      headerRow.appendChild(cell);
+    });
+    wrap.appendChild(headerRow);
+  }
+
+  const gridEl = document.createElement('div');
+  gridEl.className = 'bingo-grid';
+  gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+
+  cells.forEach((cell, idx) => {
+    const c = document.createElement('div');
+    c.className = 'bingo-cell' + (cell.free ? ' free-cell' : '');
+    c.innerHTML = `<div class="cell-emoji">${cell.emoji}</div><div class="cell-text">${cell.text}</div>`;
+    if (!cell.free) {
+      c.onclick = () => {
+        c.classList.toggle('marked');
+        checkBingo(boardId, size);
+      };
+    } else {
+      c.classList.add('marked');
+    }
+    gridEl.appendChild(c);
+  });
+
+  wrap.appendChild(gridEl);
+
+  const winMsg = document.createElement('div');
+  winMsg.className = 'bingo-win';
+  winMsg.id = `win-${boardId}`;
+  winMsg.textContent = '🎉 בינגו! 🎉';
+  wrap.appendChild(winMsg);
+
+  return wrap;
+}
+
+function checkBingo(boardId, size) {
+  const board = document.getElementById(`board-${boardId}`);
+  const cells = Array.from(board.querySelectorAll('.bingo-cell'));
+  const marked = cells.map(c => c.classList.contains('marked'));
+
+  let bingo = false;
+  // Rows
+  for (let r = 0; r < size; r++) {
+    if (marked.slice(r * size, r * size + size).every(Boolean)) bingo = true;
+  }
+  // Cols
+  for (let c = 0; c < size; c++) {
+    let col = true;
+    for (let r = 0; r < size; r++) if (!marked[r * size + c]) col = false;
+    if (col) bingo = true;
+  }
+  // Diagonals
+  let d1 = true, d2 = true;
+  for (let i = 0; i < size; i++) {
+    if (!marked[i * size + i]) d1 = false;
+    if (!marked[i * size + (size - 1 - i)]) d2 = false;
+  }
+  if (d1 || d2) bingo = true;
+
+  const win = document.getElementById(`win-${boardId}`);
+  win.style.display = bingo ? 'block' : 'none';
+}
+
+renderBoards();
+
+// ====== QUESTIONS LIST ======
+function renderQuestionsList() {
+  const el = document.getElementById('questionsList');
+  el.innerHTML = '<h2 style="color:var(--gold);margin-bottom:20px;font-size:1.5rem;">📋 כל שאלות הבינגו</h2>';
+  questions.forEach((q, i) => {
+    el.innerHTML += `
+      <div class="q-item">
+        <span class="q-num">${i + 1}.</span>
+        <span class="q-q">${q.emoji} ${q.q}
+          ${q.type === 'complete' ? '<span class="complete-tag">השלם משפט</span>' : ''}
+        </span>
+        <span class="q-a">${q.a}</span>
+      </div>`;
+  });
+}
+renderQuestionsList();
+
+// ====== TABS ======
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab + '-tab').classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
